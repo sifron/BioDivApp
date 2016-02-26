@@ -1,0 +1,50 @@
+body {
+  background: #fafafa;
+  font-family: 'Open Sans', 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #333;
+}
+paper-toolbar.mainDrawer {
+    background: #2EB82E;
+}
+paper-toolbar.mainToolbar{
+    background: #2EB82E;
+}
+.mainTitle {
+    font-size: 35px;
+    float: left;
+      position: relative;
+      left: 40%;
+}
+#zoom {
+    text-align: right;
+    padding-right: 50px;
+    padding-top: 40px;
+}
+paper-button.submitButton {
+    background-color: #5CD65C;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    padding-top: 10px;
+    color: white;
+}
+paper-button.rawButton {
+    background-color: #EBFAEB;
+    position: absolute;
+    left: 70px;
+    top: 120px;
+    padding-top: 10px;
+}
+paper-button.bioButton {
+    background-color: #EBFAEB;
+    position: absolute;
+    left: 30px;
+    top: 180px;
+    padding-top: 10px;
+}
+#LocateButton {
+    position: absolute;
+    left: 100px;
+    top: 250px;
+    padding-top: 10px;
+}

@@ -1,0 +1,163 @@
+<!doctype html>
+
+<html lang="">
+    
+<head>
+    <title>EcoDiversity</title>
+    
+    <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    
+    <link rel="stylesheet" href="styles/main.css">
+    
+    <link rel="import" href="elements/elements.html">
+    
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    
+            <link rel="stylesheet" href="http://js.arcgis.com/3.14/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="http://js.arcgis.com/3.14/esri/css/esri.css">
+    
+    <style>
+      #mapDiv{
+        margin: 0;
+        padding:0;
+        height: calc(100vh - 65px) !important;
+        width: 100%;
+      }
+    </style>
+    <script src="http://js.arcgis.com/3.14/">
+    </script>
+    <script>
+   var map;
+
+var species, number, area;
+
+require(["esri/map", "esri/layers/GraphicsLayer", "esri/layers/FeatureLayer", "esri/graphic", "esri/tasks/query", "esri/tasks/QueryTask", "esri/dijit/LocateButton", "esri/renderers/ClassBreaksRenderer", "dojo/domReady!"], 
+function(Map, GraphicsLayer, FeatureLayer, Graphic, Query, QueryTask, LocateButton, ClassBeaksRenderer) {
+    
+    var position;
+    
+    var map = new Map("mapDiv", {
+      basemap: "gray",
+      center: [-80, 35],
+      zoom: 5
+    });
+
+    var geoLocater = new LocateButton({map: map}, "LocateButton");
+    geoLocater.startup();
+    geoLocater.on("locate", setLocation);
+    geoLocater.locate();
+    
+    function setLocation(evt){
+        console.log(evt);
+        position = evt.graphic.geometry;
+    
+    }
+//    var setLocation = function(evt){
+//        console.log(evt);
+//        position = evt.graphic.geometry;
+//        alert("Hello! I am an alert box!!");
+//    }
+    var bioLayer = new FeatureLayer("http://services5.arcgis.com/xRDABW7n6GJpdP4S/arcgis/rest/services/Ecoshare/FeatureServer/0", {
+        outFields: ["species", "number", "area"]
+    });
+    
+        map.addLayer(bioLayer);
+        
+    /*var counties = new FeatureLayer("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Demographics/ESRI_Census_USA/MapServer/3", {
+        mode: FeatureLayer.ONDEMAND,
+        outFields: ["NAME", "SQMI"]
+    });*/
+    
+    var circleLayer = new GraphicsLayer();
+    for(i = 75; i < 83; i+=3){
+        for(j = 37.5; j < 34.5; j+=3){
+            var circle = new Circle(i, j);
+            circleLayer.add(new Graphic(circle, circle.center));
+        }
+    }
+    map.addLayer(circleLayer);
+    
+        console.log('hi');
+    circleLayer.graphics.forEach(function(countyGraphic){
+        console.log(countyGraphic);
+        var countyGraphic = new Array();
+        
+        countyGraphic.attributes.bioData = {totalCount: 0, totalSpecies: 0, bioIndex: 0};
+        bioLayer.graphics.forEach(function(bioGraphic){
+            if(countyGraphic.geometry.contains(bioGraphic.geometry)){
+                var added = false;
+                countyGraphic.attributes.speciesData.forEach(function(species){
+                   if(species.attributes.species === bioGraphic.attributes.species){
+                       species.push(bioGraphic);
+                   }
+                });
+                if(!added){
+                    countyGraphic.attributes.speciesData.push(new Array());
+                }
+            }
+        });
+        countyGraphic.attributes.speciesData.forEach(function(species){
+            var population = 0;
+            species.forEach(function(datapoint){
+                population += (datapoint.attributes.number / datapoint.attributes.area) * countyGraphic.attributes.SQMI;
+            });
+            population = population/species.length;
+            countyGraphic.attributes.bioData.totalCount += population;
+            countyGraphic.attributes.bioData.totalSpecies++;
+            console.log(countyGraphic.attributes.bioData.totalCount);
+        });
+        countyGraphic.attributes.bioData.bioIndex = countyGraphic.attributes.bioData.totalCount/countyGraphic.attributes.bioData.totalSpecies;
+    });
+    var renderer = new ClassBeaksRenderer(null, function(graphic){
+        return graphic.attributes.bioData.bioIndex;
+    });
+    circleLayer.setRenderer(renderer);
+    
+    
+    
+});
+    </script>
+    
+    
+</head>
+    
+<body class="fullbleed vertical layout">
+    
+    <paper-drawer-panel force-narrow>
+          <paper-header-panel drawer>
+                <paper-toolbar class="mainDrawer">
+                    <div>
+                        <paper-icon-button class="drawerButton" icon="menu" paper-drawer-toggle></paper-icon-button>                       </div>
+                </paper-toolbar>
+              
+              <div id="drawerContent">
+                  <div id="zoom">
+                    Zoom Controls
+                  </div>
+                  <br/>
+                  <br/>
+                  <div>
+                      <paper-button raised class="rawButton">Raw Data</paper-button>
+                  </div>
+                  <div>
+                      <paper-button raised class="bioButton">Biological Richness</paper-button>
+                  </div>
+                  <div id="LocateButton"></div>
+              </div>
+              
+          </paper-header-panel>
+
+         <paper-header-panel main>
+             <paper-toolbar class="mainToolbar">
+                  <paper-icon-button class="drawerButton" icon="menu" paper-drawer-toggle></paper-icon-button>
+                  <div class="mainTitle">EcoDiversity</div> 
+                  <a href="submit.html"><paper-button raised class="submitButton">Submit Data</paper-button></a>
+            </paper-toolbar>
+             
+                 <div id="mapDiv" />
+
+            </paper-header-panel>
+        </paper-drawer-panel>
+</body>
+    
+</html>
